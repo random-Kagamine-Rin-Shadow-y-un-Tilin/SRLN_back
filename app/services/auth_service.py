@@ -18,7 +18,7 @@ async def register_user(pool: asyncpg.Pool, data: UserRegister):
         raise HTTPException(status.HTTP_409_CONFLICT, "Ese correo ya esta registrado.")
     
     password_hash = hash_password(data.password)
-    user = await user_repo.create_user(pool, data.nombre, data.correo, password_hash, rol="cliente")
+    user = await user_repo.create_user(pool, data.nombre, data.correo, password_hash, data.rol)
     return user
 
 async def login_user(pool: asyncpg.Pool, data: UserLogin):

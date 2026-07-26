@@ -5,6 +5,7 @@ class UserRegister(BaseModel):
     correo: EmailStr
     password: str
     confirm_password: str
+    rol: str = 'cliente'
     
     @field_validator("password")
     @classmethod

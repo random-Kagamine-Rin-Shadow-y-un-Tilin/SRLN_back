@@ -29,7 +29,6 @@ def _set_auth_cookies(response: Response, access_token: str, resfresh_token: str
 
 @router.post("/register", response_model=UserOut, status_code=201)
 async def register(data: UserRegister, pool: asyncpg.Pool = Depends(get_db_pool)):
-    print('Esta ruta existe jajjaj')
     user = await auth_service.register_user(pool, data)
     return dict(user)
 

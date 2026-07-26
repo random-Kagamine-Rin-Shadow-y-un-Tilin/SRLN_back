@@ -16,7 +16,7 @@ async def create_user(
     query = """
         INSERT INTO usuarios (nombre, correo, password_hash, rol, fecha_registro)
         VALUES ($1, $2, $3, $4, now())
-        RETURNING id, nombre, correo, rol 
+        RETURNING id, nombre, correo, rol
  """
     async with pool.acquire() as conn:
         return await conn.fetchrow(query, name, email, password_hash, rol)
