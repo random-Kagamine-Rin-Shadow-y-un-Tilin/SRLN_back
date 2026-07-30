@@ -16,7 +16,6 @@ async def get_current_user(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "No hay sesión activa.")
 
     payload = decode_acces_token(access_token)
-    print(payload)
     if payload is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token inválido o expirado.")
         

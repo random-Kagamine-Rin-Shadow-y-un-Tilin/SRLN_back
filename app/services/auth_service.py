@@ -27,7 +27,7 @@ async def login_user(pool: asyncpg.Pool, data: UserLogin):
     if not user or not verify_password(data.password, user['password_hash']):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Correo o contraseña incorrectos.")
     
-    access_token = create_acces_token({"sub": str(user["id"]), "rol": user["rol"], "nombre": user["nombre"]})
+    access_token = create_acces_token({"sub": str(user["id"]), "rol": user["rol"]})
     
     refresh_token = generate_refresh_token()
     await refresh_repo.save_refresh_token(
@@ -43,7 +43,8 @@ async def refresh_access_token(pool: asyncpg.Pool, refresh_token: str):
     print(record)
     
     if not record:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sesión expirada, inicia sesión de nuevo.")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, 
+                            "Sesión expirada, inicia sesión de nuevo.")
     
     user = await user_repo.get_user_by_id(pool, record['user_id'])
     if not user:
