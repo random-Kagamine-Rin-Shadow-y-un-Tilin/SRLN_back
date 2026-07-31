@@ -3,7 +3,7 @@ import asyncpg
 async def create_shop(pool: asyncpg.Pool, id_owner: int, name: str, description: str,
                       category: str, shop_img: str = None):
     query = """
-        INSERT INTO negocios (deuno_id, nombre, descripcion, fecha_creacion, imagen_negocio,
+        INSERT INTO negocios (dueno_id, nombre, descripcion, fecha_creacion, imagen_negocio,
         categoria_negocio) VALUES($1, $2, $3, now(), $4, $5)
         RETURNING id, nombre, descripcion, imagen_negocio, categoria_negocio
     """

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from app.core.dependencies import get_db_pool, verify_api_key, get_current_user
 from app.models.shop import ShopRegister, ShopOut
 from app.services import shop_service
+from app.core.storage import upload_img
 
 import asyncpg
 
@@ -22,3 +23,23 @@ async def register_shop(
     )
     
     return dict(shop)
+
+@router.post("/upload-image")
+async def submit_img(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    if current_user["rol"] != "negocio":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo negocios pueden subir imagenes.")
+    
+    if file.content_type not in ("image/jpeg", "image/png", "image/webp"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Formato de imagen no permitido.")
+    
+    content = await file.read()
+    
+    if len(content) > 5 * 1024 * 1024: #Max 5mb
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "La imagen no debe superar 5MB.")
+    
+    
+    url = await upload_img(content, file.filename, file.content_type)
+    return {"url": url}

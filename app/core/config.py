@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     jwt_access_expire_minutes : int = 60
     jwt_refresh_expire_days : int = 14
     api_key: str
+    #Bucket for photos
+    supabase_url : str
+    supabase_service_role_key: str
+    supabase_bucket: str = 'negocios_fotos'
     
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")
         
