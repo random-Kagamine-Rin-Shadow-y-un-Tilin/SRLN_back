@@ -10,3 +10,14 @@ async def create_shop(pool: asyncpg.Pool, id_owner: int, name: str, description:
     async with pool.acquire() as conn:
         return await conn.fetchrow(query, id_owner, name, description, shop_img, category)
     
+async def get_shops_by_owner(pool: asyncpg.Pool, id_owner: int):
+    query = """
+        SELECT id, nombre, descripcion, categoria_negocio, imagen_negocio
+        FROM negocios
+        WHERE dueno_id = $1
+        ORDER BY fecha_creacion DESC
+    """
+    
+    async with pool.acquire() as conn:
+        return await conn.fetch(query, id_owner)
+    

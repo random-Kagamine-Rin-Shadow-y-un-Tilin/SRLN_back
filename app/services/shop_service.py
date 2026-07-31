@@ -21,3 +21,7 @@ async def register_shop(pool: asyncpg.pool, data: ShopRegister, dueno_id: int, r
     )
     
     return shop
+
+async def get_my_shops(pool: asyncpg.Pool, owner_id: int):
+    shops = await repo.get_shops_by_owner(pool, owner_id)
+    return shops

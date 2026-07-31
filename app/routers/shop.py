@@ -43,3 +43,11 @@ async def submit_img(
     
     url = await upload_img(content, file.filename, file.content_type)
     return {"url": url}
+
+@router.get("/my-shops", response_model=list[ShopOut])
+async def get_my_shops(
+    current_user : dict = Depends(get_current_user),
+    pool: asyncpg.Pool = Depends(get_db_pool)
+):
+    shops = await shop_service.get_my_shops(pool, int(current_user["sub"]))
+    return [dict(shop) for shop in shops]
