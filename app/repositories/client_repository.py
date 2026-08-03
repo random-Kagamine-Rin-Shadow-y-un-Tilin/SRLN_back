@@ -5,8 +5,10 @@ from datetime import date, time, datetime
 # Consulta de todos los negocios-------------------------------------------
 async def get_all_shops(pool: asyncpg.Pool):
     query = """
-        SELECT id, nombre, descripcion, imagen_negocio, categoria_negocio 
-        FROM negocios where estado_negocio = true
+        SELECT id, nombre, descripcion, imagen_negocio, c.nombre_categoria as categoria_negocio
+        FROM negocios 
+        INNER JOIN categorias AS c ON id_categoria = fk_categoria
+        where estado_negocio = true
     """
     async with pool.acquire() as conn:
         return await conn.fetch(query)
@@ -14,8 +16,9 @@ async def get_all_shops(pool: asyncpg.Pool):
 # Busqueda de negocio por nombre -------------------------------------------
 async def search_shops_by_name(pool: asyncpg.Pool, search_term: str):
     query = """
-        SELECT id, nombre, descripcion, imagen_negocio, categoria_negocio 
+        SELECT id, nombre, descripcion, imagen_negocio, c.nombre_categoria as categoria_negocio
         FROM negocios 
+        INNER JOIN categorias AS c ON id_categoria = fk_categoria
         WHERE estado_negocio = true 
         AND LOWER(nombre) LIKE LOWER($1)
         ORDER BY nombre
@@ -26,25 +29,27 @@ async def search_shops_by_name(pool: asyncpg.Pool, search_term: str):
 # Busqueda de negocio por categoria ----------------------------------------
 async def search_shops_by_category(pool: asyncpg.Pool, category: str):
     query = """
-        SELECT id, nombre, descripcion, imagen_negocio, categoria_negocio 
-        FROM negocios 
-        WHERE estado_negocio = true 
-        AND LOWER(categoria_negocio) = LOWER($1)
-        ORDER BY nombre
+        SELECT n.id, n.nombre, n.descripcion, n.imagen_negocio, c.nombre_categoria as categoria_negocio
+        FROM negocios AS n
+        INNER JOIN categorias AS c ON c.id_categoria = n.fk_categoria
+        WHERE n.estado_negocio = true 
+        AND LOWER(c.nombre_categoria) LIKE LOWER($1)
+        ORDER BY n.nombre
     """
     async with pool.acquire() as conn:
-        return await conn.fetch(query, category)
+        return await conn.fetch(query, f"%{category}%")
     
 #Busqueda de negocio por nombre y categoria --------------------------------
 async def search_shops(pool: asyncpg.Pool, search_term: str):
     query = """
-        SELECT id, nombre, descripcion, imagen_negocio, categoria_negocio 
+        SELECT id, nombre, descripcion, imagen_negocio, categoria_negocio, c.nombre_categoria as categoria_negocio
         FROM negocios 
+        INNER JOIN categorias AS c ON c.id_categoria = fk_categoria
         WHERE estado_negocio = true 
         AND (
             LOWER(nombre) LIKE LOWER($1) 
             OR LOWER(descripcion) LIKE LOWER($1)
-            OR LOWER(categoria_negocio) LIKE LOWER($1)
+            OR LOWER(c.nombre_categoria) LIKE LOWER($1)
         )
         ORDER BY nombre
     """
@@ -54,8 +59,9 @@ async def search_shops(pool: asyncpg.Pool, search_term: str):
 # Obtener un negocio por su ID
 async def get_negocio_by_id(pool: asyncpg.Pool, negocio_id: int):
     query = """
-        SELECT id, nombre, descripcion, imagen_negocio, categoria_negocio
+        SELECT id, nombre, descripcion, imagen_negocio, c.nombre_categoria as categoria_negocio
         FROM negocios
+        INNER JOIN categorias AS c ON id_categoria = fk_categoria
         WHERE id = $1 AND estado_negocio = true
     """
     async with pool.acquire() as conn:
@@ -64,10 +70,11 @@ async def get_negocio_by_id(pool: asyncpg.Pool, negocio_id: int):
 #Obtener horarios de un negocio para un día específico
 async def get_horarios_by_negocio_dia(pool: asyncpg.Pool, negocio_id: int, dia: str):
     query = """
-        SELECT  n.id, n.dueno_id, n.nombre, n.descripcion, n.imagen_negocio, n.categoria_negocio, 
+        SELECT  n.id, n.dueno_id, n.nombre, n.descripcion, n.imagen_negocio, c.nombre_categoria as categoria_negocio,
         n.estado_negocio, h.id_horario, h.dia, h.hora_apertura, h.hora_cierre, h.estado_horario,
         ho.id_hora, ho.hora_inicio, ho.hora_fin, ho.estado_hora
         FROM negocios AS n
+        INNER JOIN categorias AS c ON id_categoria = fk_categoria
         INNER JOIN horarios AS h ON h.negocio_id = n.id
         INNER JOIN horas AS ho ON ho.horario_id = h.id_horario
         WHERE n.id = $1 
