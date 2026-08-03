@@ -1,23 +1,45 @@
 import asyncpg
 
 async def create_shop(pool: asyncpg.Pool, id_owner: int, name: str, description: str,
-                      category: str, shop_img: str = None):
+                      category: int, shop_img: str = "null"):
     query = """
         INSERT INTO negocios (dueno_id, nombre, descripcion, fecha_creacion, imagen_negocio,
-        categoria_negocio) VALUES($1, $2, $3, now(), $4, $5)
-        RETURNING id, nombre, descripcion, imagen_negocio, categoria_negocio
+        fk_categoria) VALUES($1, $2, $3, now(), $4, $5)
+        RETURNING id, nombre, descripcion, imagen_negocio, fk_categoria AS categoria_negocio
     """
     async with pool.acquire() as conn:
         return await conn.fetchrow(query, id_owner, name, description, shop_img, category)
     
 async def get_shops_by_owner(pool: asyncpg.Pool, id_owner: int):
     query = """
-        SELECT id, nombre, descripcion, categoria_negocio, imagen_negocio
-        FROM negocios
+        SELECT *
+        FROM negocios_view
         WHERE dueno_id = $1
         ORDER BY fecha_creacion DESC
     """
     
     async with pool.acquire() as conn:
         return await conn.fetch(query, id_owner)
+    
+async def get_shop_by_id(pool: asyncpg.Pool, id_shop: int):
+    query = """
+        SELECT *
+        FROM negocios_view
+        WHERE id = $1
+    """
+    
+    async with pool.acquire() as conn:
+        return await conn.fetchrow(query, id_shop)
+    
+
+async def edit_basic_shop(pool: asyncpg.Pool, id_shop: int, name: str, description: str,
+                          category: str, shop_img: str = "null"):
+    query = """
+        UPDATE negocios SET nombre = $1, descripcion = $2, imagen_negocio = $3,
+        caregoria_negocio = $4 WHERE id = $5
+    """
+    
+    async with pool.acquire() as conn:
+        return await conn.fetchrow(query, name, description, shop_img, category, id_shop)
+    
     

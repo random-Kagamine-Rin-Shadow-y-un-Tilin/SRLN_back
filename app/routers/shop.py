@@ -51,3 +51,12 @@ async def get_my_shops(
 ):
     shops = await shop_service.get_my_shops(pool, int(current_user["sub"]))
     return [dict(shop) for shop in shops]
+
+@router.get("/get-shop/{shop_id}", response_model=ShopOut)
+async def get_shop_by_id(
+    shop_id: int,
+    current_user : dict = Depends(get_current_user),
+    pool: asyncpg.Pool = Depends(get_db_pool)
+):
+    shop = await shop_service.get_shop_by_id(pool, shop_id, int(current_user["sub"]))
+    return dict(shop)
