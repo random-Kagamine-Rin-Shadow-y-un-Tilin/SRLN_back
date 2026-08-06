@@ -13,3 +13,11 @@ class ShopOut(BaseModel):
     descripcion: str
     imagen_negocio: str
     categoria_negocio: str | int
+    
+class ShopContactOut(BaseModel):
+    nombre_red: str
+    url: str
+
+class ShopFullProfileOut(BaseModel):
+    general: ShopOut
+    contacto: list[ShopContactOut] = []

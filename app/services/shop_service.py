@@ -1,8 +1,11 @@
 from fastapi import HTTPException, status
 from app.models.shop import ShopRegister
-from app.repositories import shop_repository as repo
+from app.models.shop_contact import ShopContactRegister
+from app.repositories import shop_repository as shop_repo
+from app.repositories import shop_contact_repository as contact_repo
 
 import asyncpg
+import asyncio
 
 async def register_shop(pool: asyncpg.pool, data: ShopRegister, dueno_id: int, rol: str):
     if rol != "negocio":
@@ -11,7 +14,7 @@ async def register_shop(pool: asyncpg.pool, data: ShopRegister, dueno_id: int, r
             "Solo los usuarios tipo negocio pueden registrar un negocio."
         )
         
-    shop = await repo.create_shop(
+    shop = await shop_repo.create_shop(
         pool,
         id_owner = dueno_id,
         name = data.nombre,
@@ -23,11 +26,11 @@ async def register_shop(pool: asyncpg.pool, data: ShopRegister, dueno_id: int, r
     return shop
 
 async def get_my_shops(pool: asyncpg.Pool, owner_id: int):
-    shops = await repo.get_shops_by_owner(pool, owner_id)
+    shops = await shop_repo.get_shops_by_owner(pool, owner_id)
     return shops
 
 async def get_shop_by_id(pool: asyncpg.Pool, shop_id: int, current_user_id: int):
-    shop = await repo.get_shop_by_id(pool, shop_id)
+    shop = await shop_repo.get_shop_by_id(pool, shop_id)
     if not shop:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Negocio no encontrado.")
     
@@ -35,3 +38,47 @@ async def get_shop_by_id(pool: asyncpg.Pool, shop_id: int, current_user_id: int)
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No tienes permiso para ver este negocio.")
     
     return shop
+
+async def get_shop_full_profile(pool: asyncpg.Pool, shop_id: int):
+    shop = await shop_repo.get_shop_by_id(pool, shop_id)
+    
+    if not shop:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Negocio no encontrado.")
+    
+    contacts = await get_contacts_by_shop(pool, shop_id)
+    
+    return{
+        "general": dict(shop),
+        "contact": [dict(c) for c in contacts],
+    }
+
+# SERVICES OF CONTACT
+async def add_contact(pool: asyncpg.Pool, shop_id: int, data: ShopContactRegister,
+                      current_user_id: int):
+    shop = await shop_repo.get_shop_by_id(pool, shop_id)
+    
+    if not shop:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Negocio no encontrado.")
+    
+    if shop['dueno_id'] != current_user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "No tienes permiso para editar este negocio")
+    
+    exist_contact = await contact_repo.get_contact_by_shop_and_red(
+        pool, shop_id, data.nombre_red.value
+    )
+    
+    if exist_contact:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"Ya existe un contacto de tipo '{data.nombre_red.value}' para este negocio"
+        )
+    
+    contact = await contact_repo.create_contact(
+        pool, shop_id, data.nombre_red.value, data.url
+    )
+    
+    return contact
+
+async def get_contacts_by_shop(pool: asyncpg.Pool, shop_id: int):
+    conatcts = await contact_repo.get_contact_by_shop(pool, shop_id)
+    return conatcts

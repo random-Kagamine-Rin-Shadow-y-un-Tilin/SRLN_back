@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from app.core.dependencies import get_db_pool, verify_api_key, get_current_user
-from app.models.shop import ShopRegister, ShopOut
+from app.models.shop import ShopRegister, ShopOut, ShopFullProfileOut
+from app.models.shop_contact import ShopContactRegister, ShopContactOut
 from app.services import shop_service
 from app.core.storage import upload_img
 
@@ -52,11 +53,21 @@ async def get_my_shops(
     shops = await shop_service.get_my_shops(pool, int(current_user["sub"]))
     return [dict(shop) for shop in shops]
 
-@router.get("/get-shop/{shop_id}", response_model=ShopOut)
+@router.get("/get-shop/{shop_id}", response_model=ShopFullProfileOut)
 async def get_shop_by_id(
     shop_id: int,
+    pool: asyncpg.Pool = Depends(get_db_pool)
+):
+    return await shop_service.get_shop_full_profile(pool, shop_id)
+
+#Contact routes
+
+@router.post("/register-contact/{shop_id}", response_model=ShopContactOut, status_code=201)
+async def add_contact(
+    shop_id: int,
+    data: ShopContactRegister,
     current_user : dict = Depends(get_current_user),
     pool: asyncpg.Pool = Depends(get_db_pool)
 ):
-    shop = await shop_service.get_shop_by_id(pool, shop_id, int(current_user["sub"]))
-    return dict(shop)
+    contact = await shop_service.add_contact(pool, shop_id, data, int(current_user["sub"]))
+    return dict(contact)
