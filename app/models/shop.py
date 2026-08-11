@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import time
 
 class ShopRegister(BaseModel):
     nombre: str
@@ -17,7 +18,14 @@ class ShopOut(BaseModel):
 class ShopContactOut(BaseModel):
     nombre_red: str
     url: str
+    
+class ShopScheduleOut(BaseModel):
+    id_horario: int
+    dia: str
+    hora_apertura: time
+    hora_cierre : time
 
 class ShopFullProfileOut(BaseModel):
     general: ShopOut
     contacto: list[ShopContactOut] = []
+    horario: list[ShopScheduleOut] = []

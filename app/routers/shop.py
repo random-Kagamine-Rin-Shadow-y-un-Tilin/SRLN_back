@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from app.core.dependencies import get_db_pool, verify_api_key, get_current_user
 from app.models.shop import ShopRegister, ShopOut, ShopFullProfileOut
 from app.models.shop_contact import ShopContactRegister, ShopContactOut
+from app.models.shop_schedule import ShopRegisterSchedule, ShopScheduleOut
 from app.services import shop_service
 from app.core.storage import upload_img
 
@@ -71,3 +72,20 @@ async def add_contact(
 ):
     contact = await shop_service.add_contact(pool, shop_id, data, int(current_user["sub"]))
     return dict(contact)
+
+#Schedule routes
+@router.post("/register-schedule/{shop_id}", response_model=ShopScheduleOut, status_code=201)
+async def add_schedule(
+    shop_id : int,
+    data : ShopRegisterSchedule,
+    current_user : dict = Depends(get_current_user),
+    pool: asyncpg.Pool = Depends(get_db_pool)
+):
+    schedule = await shop_service.insert_schedule(
+        pool, 
+        shop_id, 
+        data, 
+        int(current_user["sub"],
+    ))
+    
+    return dict(schedule)
