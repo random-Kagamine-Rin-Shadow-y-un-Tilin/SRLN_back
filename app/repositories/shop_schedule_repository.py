@@ -11,7 +11,7 @@ async def get_weekly_schedule(pool: asyncpg.Pool, shop_id: int):
         return await conn.fetch(query, shop_id)
  
 async def get_day_by_shop_and_day(pool: asyncpg.Pool, shop_id: int, day: str):
-    query= """
+    query = """
         SELECT id_horario, dia
         FROM horarios WHERE negocio_id = $1 
         AND dia = $2
